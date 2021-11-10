@@ -2,6 +2,8 @@
 Easily boot files from an EZ Flash Omega SD card in an emulator, and copy the save file back to the card afterwards.
 This is a very basic and unoptimized project I made in my spare time - it'll be largely unsupported, and likely won't be updated much. Pull requests are okay, though.
 
+This should support the original kernel's save file directory, as well as the slightly different directory used by custom kernels such as Simple by Sterophonick.
+
 # Instructions
 1. Install VisualBoyAdvance
 * Windows users:
