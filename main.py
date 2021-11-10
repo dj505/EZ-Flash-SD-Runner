@@ -1,7 +1,8 @@
 import os
 import subprocess
 import tkinter as tk
-import time
+import datetime
+from datetime import datetime
 from shutil import copy2 as copy
 from tkinter import filedialog, messagebox
 
@@ -23,12 +24,15 @@ class EZF_Runner(tk.Tk):
         return games
 
     def BackupFiles(self, type, dir):
+        time = datetime.now().strftime('%b %d %Y')
         if not os.path.exists(f"./{type}_backup"):
             os.makedirs(f"./{type}_backup")
+        if not os.path.exists(f"./{type}_backup/{time}"):
+            os.makedirs(f"./{type}_backup/{time}")
         for subdir, dirs, files in os.walk(dir):
             for file in files:
                 file = os.path.join(dir, file)
-                copy(file, f"./{type}_backup")
+                copy(file, f"./{type}_backup/{time}")
         messagebox.showinfo("Done", f"{type.upper()} backup complete")
 
     def __init__(self, *args, **kwargs):
