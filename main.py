@@ -23,6 +23,8 @@ class EZF_Runner(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+        self.iconbitmap('./img/icon.ico')
+        self.winfo_toplevel().title("EZ Flash SD Runner v0.1")
 
         if not os.path.exists("./rom"):
             os.makedirs("rom")
@@ -44,7 +46,7 @@ class EZF_Runner(tk.Tk):
 
         toplabel = tk.Label(topframe, text="Double-click a game:")
         gamelist = tk.Listbox(middleframe, width=60, height=35)
-        bottomlabel = tk.Label(bottomframe, text="EZ Flash Runner v0.1 - by dj505")
+        bottomlabel = tk.Label(bottomframe, text="EZ Flash SD Runner v0.1 - by dj505")
         scrollbar = tk.Scrollbar(middleframe)
 
         for game in games:
