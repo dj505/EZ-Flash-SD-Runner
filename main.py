@@ -1,7 +1,7 @@
 import os
 import subprocess
-from shutil import copy2 as copy
 import tkinter as tk
+from shutil import copy2 as copy
 from tkinter import filedialog, messagebox
 
 class EZF_Runner(tk.Tk):
@@ -11,13 +11,13 @@ class EZF_Runner(tk.Tk):
         self.quit()
 
     def FindGames(self, rootdir):
-        allowed_extensions = ["gba"]
+        allowed_extensions = ("gba")
         games = {}
 
         print("Finding games...")
         for subdir, dirs, files in os.walk(rootdir):
             for file in files:
-                if file.lower().endswith(".gba"):
+                if file.lower().endswith(allowed_extensions):
                     games[file[:-4]] = os.path.join(subdir, file)
         return games
 
@@ -49,7 +49,7 @@ class EZF_Runner(tk.Tk):
         bottomlabel = tk.Label(bottomframe, text="EZ Flash SD Runner v0.1 - by dj505")
         scrollbar = tk.Scrollbar(middleframe)
 
-        for game in games:
+        for game in sorted(games):
             gamelist.insert(tk.END, game)
         if len(games) < 1:
             gamelist.insert(tk.END, "No games found. Double click me to exit.")
