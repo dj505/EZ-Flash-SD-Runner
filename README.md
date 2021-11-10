@@ -21,5 +21,5 @@ After exiting the emulator, there will be a popup asking if you'd like to clear 
 This popup only refers to the local copies of the game ROM and save in the `rom` folder. At this point, the save data has already been copied back to your SD card, so answering "Yes" to this will not delete your save data - it just serves to prevent clutter.
 
 # Requirements
-Python 3
-A copy of VisualBoyAdvance
+* Python 3
+* A copy of VisualBoyAdvance
