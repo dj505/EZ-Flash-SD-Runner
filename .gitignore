@@ -116,3 +116,4 @@ dmypy.json
 # Other
 *.exe
 rom/
+*.ini
