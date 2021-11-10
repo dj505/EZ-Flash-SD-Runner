@@ -117,3 +117,4 @@ dmypy.json
 *.exe
 rom/
 *.ini
+save_backup/

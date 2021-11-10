@@ -1,6 +1,7 @@
 import os
 import subprocess
 import tkinter as tk
+import time
 from shutil import copy2 as copy
 from tkinter import filedialog, messagebox
 
@@ -21,6 +22,15 @@ class EZF_Runner(tk.Tk):
                     games[file[:-4]] = os.path.join(subdir, file)
         return games
 
+    def BackupFiles(self, type, dir):
+        if not os.path.exists(f"./{type}_backup"):
+            os.makedirs(f"./{type}_backup")
+        for subdir, dirs, files in os.walk(dir):
+            for file in files:
+                file = os.path.join(dir, file)
+                copy(file, f"./{type}_backup")
+        messagebox.showinfo("Done", f"{type.upper()} backup complete")
+
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.iconbitmap('./img/icon.ico')
@@ -29,8 +39,6 @@ class EZF_Runner(tk.Tk):
         if not os.path.exists("./rom"):
             os.makedirs("rom")
 
-        rootdir = filedialog.askdirectory()
-
         if not os.path.exists("./visualboyadvance.exe"):
             messagebox.showinfo("You Fool",
                                 "Could not find VisualBoyAdvance.exe!\n" \
@@ -38,6 +46,7 @@ class EZF_Runner(tk.Tk):
                                 "script, otherwise it won't work.")
             self.CloseApp()
 
+        rootdir = filedialog.askdirectory()
         games = self.FindGames(rootdir)
 
         topframe = tk.Frame(self, width=60, relief="raised", borderwidth=2)
@@ -57,25 +66,37 @@ class EZF_Runner(tk.Tk):
         gamelist.config(yscrollcommand = scrollbar.set)
         scrollbar.config(command = gamelist.yview)
 
-        gamelist.bind('<Double-Button-1>', lambda event, arg1=games, arg2=rootdir: self.OnSelect(event, arg1, arg2))
+        gamelist.bind('<Double-Button-1>', lambda event, arg1=games,
+                      arg2=rootdir: self.OnSelect(event, arg1, arg2))
 
         for frame in [topframe, middleframe, bottomframe]:
-            frame.pack(expand=True, fill='both')
+            frame.pack(expand=True, fill="both")
+
+        svbackupbtn = tk.Button(bottomframe, text="Backup Saves", width=40,
+                      command=lambda : self.BackupFiles("save", self.GetSaveDir(rootdir)))
 
         toplabel.pack()
+        svbackupbtn.pack(expand=True)
+
         bottomlabel.pack()
         gamelist.pack(side=tk.LEFT, fill=tk.BOTH)
         scrollbar.pack(side=tk.RIGHT, fill=tk.BOTH)
 
+        gamelist.select_set(0)
+        gamelist.focus_set()
+
     def CheckForSaveData(self, filename, root):
-        if os.path.exists(os.path.join(root, "SYSTEM", "SAVER")):
-            possible_sav_path = os.path.join(root, "SYSTEM", "SAVER", f"{filename}.sav")
-        else:
-            possible_sav_path = os.path.join(root, "SAVER", f"{filename}.sav")
+        possible_sav_path = os.path.join(root, self.GetSaveDir(root), f"{filename}.sav")
         if os.path.exists(possible_sav_path):
             return possible_sav_path
         else:
             return None
+
+    def GetSaveDir(self, root):
+        if os.path.exists(os.path.join(root, "SYSTEM", "SAVER")):
+            return os.path.join(root, "SYSTEM", "SAVER")
+        else:
+            return os.path.join(root, "SAVER")
 
     def OnSelect(self, event, games, rootdir):
         widget = event.widget
