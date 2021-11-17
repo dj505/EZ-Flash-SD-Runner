@@ -1,7 +1,5 @@
-import os
-import subprocess
+import os, subprocess, configparser, tempfile
 import tkinter as tk
-import datetime
 from datetime import datetime
 from shutil import copy2 as copy
 from tkinter import filedialog, messagebox
@@ -24,15 +22,16 @@ class EZF_Runner(tk.Tk):
         return games
 
     def BackupFiles(self, type, dir):
-        time = datetime.now().strftime('%b %d %Y')
-        if not os.path.exists(f"./{type}_backup"):
-            os.makedirs(f"./{type}_backup")
-        if not os.path.exists(f"./{type}_backup/{time}"):
-            os.makedirs(f"./{type}_backup/{time}")
+        time = datetime.now().strftime('%b-%d-%Y')
+        savedir = filedialog.askdirectory()
+
+        timedir = os.path.join(savedir, time)
+        if not os.path.exists(timedir):
+            os.makedirs(timedir)
         for subdir, dirs, files in os.walk(dir):
             for file in files:
                 file = os.path.join(dir, file)
-                copy(file, f"./{type}_backup/{time}")
+                copy(file, timedir)
         messagebox.showinfo("Done", f"{type.upper()} backup complete")
 
     def __init__(self, *args, **kwargs):
@@ -40,14 +39,16 @@ class EZF_Runner(tk.Tk):
         self.iconbitmap('./img/icon.ico')
         self.winfo_toplevel().title("EZ Flash SD Runner v0.1")
 
-        if not os.path.exists("./rom"):
-            os.makedirs("rom")
+        config = configparser.ConfigParser()
+        config.read("settings.ini")
+        emulator = config["settings"]["emulator_path"]
 
-        if not os.path.exists("./visualboyadvance.exe"):
+        if not os.path.exists(emulator):
             messagebox.showinfo("You Fool",
-                                "Could not find VisualBoyAdvance.exe!\n" \
-                                "Ensure the file is present alongside this " \
-                                "script, otherwise it won't work.")
+                                "Could not find emulator!\n" \
+                                "Ensure the path to the executable is " \
+                                "defined in settings.ini, otherwise " \
+                                "it won't work.")
             self.CloseApp()
 
         rootdir = filedialog.askdirectory()
@@ -71,7 +72,8 @@ class EZF_Runner(tk.Tk):
         scrollbar.config(command = gamelist.yview)
 
         gamelist.bind('<Double-Button-1>', lambda event, arg1=games,
-                      arg2=rootdir: self.OnSelect(event, arg1, arg2))
+                      arg2=rootdir, arg3=emulator: self.OnSelect(event, arg1,
+                                                                 arg2, arg3))
 
         for frame in [topframe, middleframe, bottomframe]:
             frame.pack(expand=True, fill="both")
@@ -98,32 +100,42 @@ class EZF_Runner(tk.Tk):
 
     def GetSaveDir(self, root):
         if os.path.exists(os.path.join(root, "SYSTEM", "SAVER")):
+            print("Save location is SYSTEM/SAVER")
             return os.path.join(root, "SYSTEM", "SAVER")
         else:
+            print("Save location is SAVER")
             return os.path.join(root, "SAVER")
 
-    def OnSelect(self, event, games, rootdir):
+    def OnSelect(self, event, games, rootdir, emulatorpath):
         widget = event.widget
         selection = widget.curselection()
         value = widget.get(selection[0])
         savedata = self.CheckForSaveData(value, rootdir)
         try:
             path = games[value]
-            self.RunGame(value, path, savedata)
+            self.RunGame(value, path, savedata, emulatorpath)
         except KeyError:
             self.CloseApp()
 
-    def RunGame(self, game, gamepath, savepath):
+    def RunGame(self, game, gamepath, savepath, emulator):
         print(f"Booting {game}...")
+
+        tempdir = tempfile.TemporaryDirectory()
+        temp = tempdir.name
+        print(f"Using temporary directory {temp}")
+
         if os.name == "nt":
-            execname = "visualboyadvance.exe"
+            if not emulator.endswith(".exe"):
+                emulator = emulator + ".exe" # probably unnecessary,
+            execname = emulator              # just to be safe, idk
         else:
-            execname = "visualboyadvance-m"
+            execname = emulator
 
-        copy(gamepath, "./rom")
-        copy(savepath, "./rom")
+        copy(gamepath, temp)
+        if savepath != None:
+            copy(savepath, temp)
 
-        path = f"./rom/{game}.gba"
+        path = os.path.join(temp, f"{game}.gba")
 
         try:
             process = subprocess.call([execname, path])
@@ -131,17 +143,8 @@ class EZF_Runner(tk.Tk):
             print("Error")
 
         print("Game closed, copying savedata back...")
-        copy(f"./rom/{game}.sav", savepath)
+        copy(os.path.join(temp, f"{game}.sav"), savepath)
 
-        answer = messagebox.askyesno(title="Exiting",
-                          message="Would you like to clear the copied ROM " \
-                          "and save data?\n\n" \
-                          "This will not delete your data from the SD card, " \
-                          "only the temporary copy for use in the emulator.")
-        if answer:
-            for subdir, dirs, files in os.walk("./rom"):
-                for file in files:
-                    os.remove(os.path.join("./rom", file))
         messagebox.showinfo("Thank You", "Done. Have a nice day!")
         self.quit()
 

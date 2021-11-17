@@ -115,6 +115,7 @@ dmypy.json
 
 # Other
 *.exe
+settings.ini
 rom/
-*.ini
+mgba/
 save_backup/
